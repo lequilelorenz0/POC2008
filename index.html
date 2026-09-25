@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gestione Squadra</title>
+<style>
+:root{
+  --navy:#122340; --navy-2:#1c3660; --blue:#2f6fb0; --gold:#e8b923;
+  --bg:#f4f5f3; --card:#ffffff; --line:#dfe2e6; --text:#16202e; --muted:#647085;
+  --danger:#c0392b; --ok:#2e7d4f;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10151d; --card:#161d28; --line:#2a3444; --text:#e8ecf1; --muted:#93a0b3;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10151d; --card:#161d28; --line:#2a3444; --text:#e8ecf1; --muted:#93a0b3;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+header{background:var(--navy);color:#fff;padding:calc(env(safe-area-inset-top,0px) + 16px) 18px 16px;position:sticky;top:0;z-index:5;}
+header h1{margin:0 0 2px;font-size:1.25rem;font-weight:700;letter-spacing:.2px}
+header p{margin:0;color:#b9c6dc;font-size:.82rem}
+.wrap{max-width:920px;margin:0 auto;padding:16px}
+.toolbar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+input,select{font:inherit;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--text)}
+input[type=search]{flex:1;min-width:140px}
+button{font:inherit;cursor:pointer;border:none;border-radius:8px;padding:9px 14px;background:var(--blue);color:#fff;font-weight:600}
+button.secondary{background:transparent;color:var(--blue);border:1px solid var(--blue)}
+button.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+button.danger{background:var(--danger)}
+button.icon{padding:6px 10px;font-size:1rem;line-height:1}
+.tabs{display:flex;gap:6px;margin-bottom:14px}
+.tabs button{background:transparent;color:var(--muted);border:1px solid var(--line)}
+.tabs button.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.list{display:flex;flex-direction:column;gap:8px}
+.row{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;gap:10px}
+.row:hover{border-color:var(--blue)}
+.row .name{font-weight:700}
+.row .sub{color:var(--muted);font-size:.8rem;margin-top:2px}
+.badge{font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:20px;background:#eef3f8;color:var(--blue)}
+.badge.warn{background:#fdecea;color:var(--danger)}
+.badge.ok{background:#eaf6ee;color:var(--ok)}
+.empty{text-align:center;color:var(--muted);padding:40px 10px}
+.overlay{position:fixed;inset:0;background:rgba(10,14,20,.5);display:flex;justify-content:center;align-items:flex-start;padding:20px;overflow-y:auto;z-index:20}
+.panel{background:var(--card);border-radius:14px;max-width:640px;width:100%;padding:20px;margin:20px 0}
+.panel h2{margin:0 0 14px;font-size:1.1rem}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:.78rem;color:var(--muted);margin-bottom:4px}
+.field input{width:100%}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.section-title{font-size:.85rem;font-weight:700;color:var(--muted);margin:18px 0 8px;text-transform:uppercase;letter-spacing:.4px}
+.counters{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.counter{border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}
+.counter .lbl{font-size:.74rem;color:var(--muted);margin-bottom:6px}
+.counter .ctl{display:flex;align-items:center;justify-content:center;gap:10px}
+.counter .val{font-size:1.2rem;font-weight:700;min-width:26px}
+.counter button{width:30px;height:30px;padding:0;border-radius:50%;font-size:1rem}
+.panel-actions{display:flex;justify-content:space-between;margin-top:18px;gap:8px}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+th,td{padding:8px 10px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
+th{background:var(--navy);color:#fff;cursor:pointer;position:sticky;top:0}
+td:first-child,th:first-child{text-align:left;position:sticky;left:0;background:var(--card)}
+th:first-child{background:var(--navy)}
+tr:hover td{background:#f0f4f8}
+</style>
+</head>
+<body>
+<div id="lockScreen" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--bg)">
+  <div style="background:var(--card);border:1px solid var(--line);border-radius:14px;padding:28px;max-width:320px;width:100%;text-align:center">
+    <div style="font-size:2rem;margin-bottom:6px">⚽</div>
+    <h2 style="margin:0 0 4px;font-size:1.1rem">Gestione Squadra</h2>
+    <p style="color:var(--muted);font-size:.85rem;margin:0 0 16px">Inserisci la password per accedere</p>
+    <input type="password" id="pwInput" placeholder="Password" style="width:100%;margin-bottom:10px" autofocus>
+    <button id="pwBtn" style="width:100%">Entra</button>
+    <p id="pwError" style="color:var(--danger);font-size:.8rem;margin:10px 0 0;display:none">Password errata, riprova.</p>
+  </div>
+</div>
+<div id="appRoot" style="display:none">
+<header>
+  <h1>Gestione Squadra</h1>
+  <p id="teamCount"></p>
+</header>
+<div class="wrap">
+  <div class="tabs">
+    <button id="tabRoster" class="active">Rosa</button>
+    <button id="tabStats">Statistiche</button>
+  </div>
+
+  <div id="rosterView">
+    <div class="toolbar">
+      <input type="search" id="search" placeholder="Cerca atleta...">
+      <button id="addBtn">+ Aggiungi atleta</button>
+    </div>
+    <div class="list" id="list"></div>
+  </div>
+
+  <div id="statsView" style="display:none">
+    <div class="tablewrap">
+      <table id="statsTable">
+        <thead><tr id="statsHead"></tr></thead>
+        <tbody id="statsBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" style="display:none">
+  <div class="panel" id="panel"></div>
+</div>
+</div>
+
+<script>
+const APP_PASSWORD = "poc2008!";
+const SESSION_KEY = "squadra_unlocked_v1";
+function tryUnlock(){
+  const val = document.getElementById("pwInput").value;
+  if(val === APP_PASSWORD){
+    try{ sessionStorage.setItem(SESSION_KEY, "1"); }catch(e){}
+    document.getElementById("lockScreen").style.display = "none";
+    document.getElementById("appRoot").style.display = "block";
+  } else {
+    document.getElementById("pwError").style.display = "block";
+  }
+}
+document.getElementById("pwBtn").addEventListener("click", tryUnlock);
+document.getElementById("pwInput").addEventListener("keydown", e=>{ if(e.key==="Enter") tryUnlock(); });
+try{
+  if(sessionStorage.getItem(SESSION_KEY) === "1"){
+    document.getElementById("lockScreen").style.display = "none";
+    document.getElementById("appRoot").style.display = "block";
+  }
+}catch(e){}
+
+const STORAGE_KEY = "squadra_atleti_v1";
+const COUNTERS = [
+  ["assAllenamenti","Assenze allenamenti"],
+  ["assEventi","Assenze eventi"],
+  ["assPartite","Assenze partite"],
+  ["ritardi","Ritardi"],
+  ["goal","Goal"],
+  ["assist","Assist"],
+  ["gialli","Cartellini gialli"],
+  ["rossi","Cartellini rossi"],
+  ["mvp","MVP"]
+];
+const FIELDS = [
+  ["nome","Nome e cognome"],["magliaBlu","Maglia blu (taglia)"],["magliaGialla","Maglia gialla (taglia)"],
+  ["scadCM","Scadenza certificato medico"],["pantaloncini","Pantaloncini (taglia)"],
+  ["telGenitori","Tel. genitori"],["telAtleta","Tel. atleta"],["felpa","Felpa (taglia)"],
+  ["magliaAll","Maglia allenamento (taglia)"],["tuta","Tuta (taglia)"],["calze","Calze (taglia)"]
+];
+
+function blankCounters(){const c={};COUNTERS.forEach(([k])=>c[k]=0);return c;}
+function athlete(o){const c=blankCounters();Object.assign(c,o.counters||{});return {id:o.id,nome:o.nome||"",magliaBlu:o.magliaBlu||"",magliaGialla:o.magliaGialla||"",scadCM:o.scadCM||"",pantaloncini:o.pantaloncini||"",telGenitori:o.telGenitori||"",telAtleta:o.telAtleta||"",felpa:o.felpa||"",magliaAll:o.magliaAll||"",tuta:o.tuta||"",calze:o.calze||"",counters:c};}
+
+const SEED = [
+ {nome:"CARUGATI MATTEO",magliaBlu:"L/16",magliaGialla:"L/1",scadCM:"22/09/2026",pantaloncini:"L",telGenitori:"3391004566",telAtleta:"3317297350",felpa:"L",magliaAll:"L",tuta:"L",calze:"x",counters:{assAllenamenti:2}},
+ {nome:"CHAGOUR ALI",magliaBlu:"M/6",magliaGialla:"L/39",scadCM:"08/02/2027",pantaloncini:"L",telGenitori:"3387535510",telAtleta:"3516141855",felpa:"L",magliaAll:"L",tuta:"",calze:"x",counters:{assAllenamenti:5}},
+ {nome:"CONSONNI GABRIELE",magliaBlu:"XS/20",magliaGialla:"S/20",scadCM:"05/11/2026",pantaloncini:"M",telGenitori:"3664866467",telAtleta:"3516467775",felpa:"S",magliaAll:"S",tuta:"",calze:"x",counters:{}},
+ {nome:"CRIPPA DARIO",magliaBlu:"XS/5",magliaGialla:"XS/5",scadCM:"01/09/2026",pantaloncini:"S",telGenitori:"3389805320",telAtleta:"3756783278",felpa:"XS",magliaAll:"XS",tuta:"S",calze:"x",counters:{assAllenamenti:1}},
+ {nome:"CRISAN MIHAI LIVIU",magliaBlu:"L/3",magliaGialla:"L/3",scadCM:"23/10/2026",pantaloncini:"M",telGenitori:"3664846213",telAtleta:"3515072152",felpa:"L",magliaAll:"L",tuta:"",calze:"x",counters:{assAllenamenti:1}},
+ {nome:"CRISPO RICCARDO LUIGI",magliaBlu:"M/9",magliaGialla:"M/9",scadCM:"31/08/2027",pantaloncini:"L",telGenitori:"3332755514",telAtleta:"3518643530",felpa:"L",magliaAll:"L",tuta:"L",calze:"x",counters:{}},
+ {nome:"FALCI CRISTIANO",magliaBlu:"L/19",magliaGialla:"L/30",scadCM:"03/11/2026",pantaloncini:"L",telGenitori:"3397462138",telAtleta:"3339655845",felpa:"L",magliaAll:"L",tuta:"L",calze:"x",counters:{}},
+ {nome:"IERARDI SAMUELE",magliaBlu:"M/11",magliaGialla:"M/11",scadCM:"05/11/2026",pantaloncini:"M",telGenitori:"3397462138",telAtleta:"3519577650",felpa:"M",magliaAll:"M",tuta:"L",calze:"x",counters:{assAllenamenti:2}},
+ {nome:"LEQUILE LORENZO",magliaBlu:"M/13",magliaGialla:"M/26",scadCM:"24/08/2027",pantaloncini:"M",telGenitori:"3355339151",telAtleta:"3662120960",felpa:"M",magliaAll:"M",tuta:"",calze:"x",counters:{}},
+ {nome:"MANULI CRISTIAN",magliaBlu:"S/69",magliaGialla:"M/54",scadCM:"28/01/2027",pantaloncini:"S",telGenitori:"3292981193",telAtleta:"3518499915",felpa:"S",magliaAll:"S",tuta:"",calze:"x",counters:{assAllenamenti:1}},
+ {nome:"MASI ANDREA",magliaBlu:"M/10",magliaGialla:"M/10",scadCM:"17/07/2026",pantaloncini:"L",telGenitori:"3933373242",telAtleta:"3515856776",felpa:"L",magliaAll:"M",tuta:"L",calze:"x",counters:{assAllenamenti:3}},
+ {nome:"MAURI RICCARDO",magliaBlu:"L/4",magliaGialla:"M/4",scadCM:"02/10/2026",pantaloncini:"L",telGenitori:"3383974769",telAtleta:"3518238353",felpa:"L",magliaAll:"L",tuta:"",calze:"x",counters:{}},
+ {nome:"PAGANI FRANCESCO",magliaBlu:"M/2",magliaGialla:"M/35",scadCM:"27/08/2027",pantaloncini:"L",telGenitori:"3357062871",telAtleta:"3920267948",felpa:"M",magliaAll:"M",tuta:"L",calze:"x",counters:{assAllenamenti:3}},
+ {nome:"PARDO DAVIDE",magliaBlu:"M/8",magliaGialla:"M/8",scadCM:"30/09/2026",pantaloncini:"M",telGenitori:"3394910027",telAtleta:"3923820322",felpa:"M",magliaAll:"M",tuta:"",calze:"x",counters:{}},
+ {nome:"POTENZA RAFFAELE",magliaBlu:"XS/17",magliaGialla:"S/16",scadCM:"01/09/2027",pantaloncini:"S",telGenitori:"3280683024",telAtleta:"3486446697",felpa:"XS",magliaAll:"S",tuta:"S",calze:"x",counters:{assAllenamenti:1}},
+ {nome:"PAUROSO LORENZO",magliaBlu:"M/22",magliaGialla:"M/22",scadCM:"07/10/2026",pantaloncini:"M",telGenitori:"3401483923",telAtleta:"3285745781",felpa:"M",magliaAll:"M",tuta:"M",calze:"x",counters:{assAllenamenti:1}},
+ {nome:"INVERNIZZI ANDREA",magliaBlu:"L/15",magliaGialla:"L",scadCM:"",pantaloncini:"L",telGenitori:"3478300825",telAtleta:"3515995179",felpa:"L",magliaAll:"L",tuta:"L",calze:"x",counters:{assAllenamenti:6}},
+ {nome:"ABDE ELKADIRI",magliaBlu:"M",magliaGialla:"M",scadCM:"04/02/2027",pantaloncini:"M",telGenitori:"3313103303",telAtleta:"3510661114",felpa:"M",magliaAll:"M",tuta:"M",calze:"x",counters:{}},
+ {nome:"BONTEMPI ALESSANDRO",magliaBlu:"",magliaGialla:"",scadCM:"",pantaloncini:"",telGenitori:"",telAtleta:"",felpa:"",magliaAll:"",tuta:"",calze:"x",counters:{}},
+ {nome:"TOMMASO PRANIO",magliaBlu:"M",magliaGialla:"M",scadCM:"22/10/2026",pantaloncini:"M",telGenitori:"",telAtleta:"",felpa:"M",magliaAll:"M",tuta:"",calze:"x",counters:{}}
+];
+
+const REMOVED_NAMES = ["CRISTIAN GAZZO","STEFANO CRISPO"];
+let data = load();
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const arr = JSON.parse(raw).map(athlete).filter(a=>!REMOVED_NAMES.includes((a.nome||"").toUpperCase()));
+      save(arr);
+      return arr;
+    }
+  }catch(e){}
+  const seeded = SEED.map((o,i)=>athlete({...o,id:"a"+i}));
+  save(seeded);
+  return seeded;
+}
+function save(arr){
+  try{localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));}catch(e){}
+}
+function persist(){save(data);}
+
+let currentEditId = null;
+
+function parseDate(d){
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(d||"");
+  if(!m) return null;
+  return new Date(+m[3], +m[2]-1, +m[1]);
+}
+function cmStatus(d){
+  const dt = parseDate(d);
+  if(!dt) return {cls:"", text:"—"};
+  const days = Math.round((dt - new Date())/86400000);
+  if(days < 0) return {cls:"warn", text:"Scaduto"};
+  if(days <= 30) return {cls:"warn", text:days+"gg"};
+  return {cls:"ok", text:d};
+}
+
+function renderList(){
+  const q = document.getElementById("search").value.trim().toLowerCase();
+  const list = document.getElementById("list");
+  const filtered = data.filter(a=>a.nome.toLowerCase().includes(q));
+  document.getElementById("teamCount").textContent = data.length + " atleti in rosa";
+  if(!filtered.length){
+    list.innerHTML = '<div class="empty">Nessun atleta trovato.</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(a=>{
+    const st = cmStatus(a.scadCM);
+    return `<div class="row" data-id="${a.id}">
+      <div>
+        <div class="name">${esc(a.nome)||"(senza nome)"}</div>
+        <div class="sub">Maglia ${esc(a.magliaBlu)||"–"} · Ass. all. ${a.counters.assAllenamenti} · Ritardi ${a.counters.ritardi}</div>
+      </div>
+      <span class="badge ${st.cls}">${st.text}</span>
+    </div>`;
+  }).join("");
+  list.querySelectorAll(".row").forEach(r=>r.addEventListener("click",()=>openPanel(r.dataset.id)));
+}
+
+function esc(s){return (s||"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+
+function openPanel(id){
+  currentEditId = id;
+  const isNew = id === null;
+  const a = isNew ? athlete({id:"a"+Date.now()}) : data.find(x=>x.id===id);
+  const panel = document.getElementById("panel");
+  panel.innerHTML = `
+    <h2>${isNew ? "Nuovo atleta" : esc(a.nome)||"Atleta"}</h2>
+    ${FIELDS.map(([k,label])=>`<div class="field"><label>${label}</label><input data-k="${k}" value="${esc(a[k])}"></div>`).join("")}
+    ${isNew ? "" : `
+    <div class="section-title">Statistiche</div>
+    <div class="counters">
+      ${COUNTERS.map(([k,label])=>`
+        <div class="counter">
+          <div class="lbl">${label}</div>
+          <div class="ctl">
+            <button class="icon" data-dec="${k}">−</button>
+            <span class="val" id="val_${k}">${a.counters[k]}</span>
+            <button class="icon" data-inc="${k}">+</button>
+          </div>
+        </div>`).join("")}
+    </div>`}
+    <div class="panel-actions">
+      <div>${isNew ? "" : '<button class="danger" id="delBtn">Elimina</button>'}</div>
+      <div>
+        <button class="ghost" id="closeBtn">Annulla</button>
+        <button id="saveBtn">Salva</button>
+      </div>
+    </div>
+  `;
+  document.getElementById("overlay").style.display = "flex";
+
+  if(!isNew){
+    panel.querySelectorAll("[data-inc]").forEach(b=>b.addEventListener("click",()=>{
+      a.counters[b.dataset.inc]++; document.getElementById("val_"+b.dataset.inc).textContent = a.counters[b.dataset.inc]; persist(); renderList();
+    }));
+    panel.querySelectorAll("[data-dec]").forEach(b=>b.addEventListener("click",()=>{
+      a.counters[b.dataset.dec] = Math.max(0, a.counters[b.dataset.dec]-1);
+      document.getElementById("val_"+b.dataset.dec).textContent = a.counters[b.dataset.dec]; persist(); renderList();
+    }));
+    document.getElementById("delBtn").addEventListener("click",()=>{
+      if(confirm("Eliminare "+a.nome+"?")){
+        data = data.filter(x=>x.id!==id);
+        persist(); closePanel(); renderList(); renderStats();
+      }
+    });
+  }
+  document.getElementById("closeBtn").addEventListener("click", closePanel);
+  document.getElementById("saveBtn").addEventListener("click",()=>{
+    FIELDS.forEach(([k])=>{ a[k] = panel.querySelector(`[data-k="${k}"]`).value.trim(); });
+    if(isNew) data.push(a);
+    persist(); closePanel(); renderList(); renderStats();
+  });
+}
+function closePanel(){ document.getElementById("overlay").style.display = "none"; currentEditId = null; }
+
+let sortKey = null, sortDir = 1;
+function renderStats(){
+  const head = document.getElementById("statsHead");
+  head.innerHTML = '<th data-k="nome">Atleta</th>' + COUNTERS.map(([k,l])=>`<th data-k="${k}">${l}</th>`).join("");
+  head.querySelectorAll("th").forEach(th=>th.addEventListener("click",()=>{
+    const k = th.dataset.k;
+    if(sortKey===k) sortDir*=-1; else {sortKey=k; sortDir=1;}
+    renderStatsBody();
+  }));
+  renderStatsBody();
+}
+function renderStatsBody(){
+  let rows = [...data];
+  if(sortKey){
+    rows.sort((x,y)=>{
+      const vx = sortKey==="nome" ? x.nome : x.counters[sortKey];
+      const vy = sortKey==="nome" ? y.nome : y.counters[sortKey];
+      return (vx>vy?1:vx<vy?-1:0) * sortDir;
+    });
+  }
+  document.getElementById("statsBody").innerHTML = rows.map(a=>
+    `<tr><td>${esc(a.nome)}</td>${COUNTERS.map(([k])=>`<td>${a.counters[k]}</td>`).join("")}</tr>`
+  ).join("");
+}
+
+document.getElementById("search").addEventListener("input", renderList);
+document.getElementById("addBtn").addEventListener("click", ()=>openPanel(null));
+document.getElementById("overlay").addEventListener("click", e=>{ if(e.target.id==="overlay") closePanel(); });
+document.getElementById("tabRoster").addEventListener("click", ()=>{
+  document.getElementById("tabRoster").classList.add("active");
+  document.getElementById("tabStats").classList.remove("active");
+  document.getElementById("rosterView").style.display = "block";
+  document.getElementById("statsView").style.display = "none";
+});
+document.getElementById("tabStats").addEventListener("click", ()=>{
+  document.getElementById("tabStats").classList.add("active");
+  document.getElementById("tabRoster").classList.remove("active");
+  document.getElementById("statsView").style.display = "block";
+  document.getElementById("rosterView").style.display = "none";
+});
+
+renderList();
+renderStats();
+</script>
+</body>
+</html>
